@@ -12,6 +12,7 @@ body {
 }
 
 #functions textarea {
+    border-top-width: 2px;
     display: block;
     font-family: monospace;
     height: 5em;
