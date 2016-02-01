@@ -125,7 +125,7 @@ function fetchFunctions()
         storedFunctions = [
             {
                 func: "function (x) {\n" +
-                      "    return Math.sin(x/10) * 20;\n" +
+                      "    return Math.sin(x) * 2;\n" +
                       "}\n",
                 color: colors[0],
             }
