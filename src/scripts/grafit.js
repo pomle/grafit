@@ -34,7 +34,6 @@ function createInput()
 
     var element = document.createElement('textarea');
     var color = colors[colors.counter++ % colors.length];
-    console.log(color);
     element.style.borderColor = color;
     funcInputs.appendChild(element);
     return element;
@@ -51,8 +50,11 @@ function detectGraphSizeChange()
 function drawAll()
 {
     context.clearRect(0, 0, canvas.width, canvas.height);
+    drawGrid();
     for (var i = 0, l = functions.length; i !== l; ++i) {
-        drawFunction(functions[i]);
+        if (functions[i]) {
+            drawFunction(functions[i]);
+        }
     }
 }
 
@@ -83,7 +85,31 @@ function drawFunction(f)
 
 function drawGrid()
 {
-    context.strokeStyle = '#d8faff';
+    var point;
+    context.beginPath();
+    point = canvasPoint({
+        x: viewport[0].x,
+        y: 0,
+    });
+    context.moveTo(point.x, point.y);
+    point = canvasPoint({
+        x: viewport[1].x,
+        y: 0,
+    });
+    context.lineTo(point.x, point.y);
+    point = canvasPoint({
+        x: 0,
+        y: viewport[0].y,
+    });
+    context.moveTo(point.x, point.y);
+    point = canvasPoint({
+        x: 0,
+        y: viewport[1].y,
+    });
+    context.lineTo(point.x, point.y);
+    context.strokeStyle = '#1e9dcc';
+    context.stroke();
+    context.closePath();
 }
 
 function fetchFunctions()
@@ -99,7 +125,7 @@ function fetchFunctions()
         storedFunctions = [
             {
                 func: "function (x) {\n" +
-                      "    return Math.sin(x) * 50;\n" +
+                      "    return Math.sin(x/10) * 20;\n" +
                       "}\n",
                 color: colors[0],
             }
@@ -114,37 +140,55 @@ function fetchFunctions()
     }
 }
 
-function storeFunctions()
-{
-    debugger;
-    var storedFunctions = [];
-    [].forEach.call(funcInputs.querySelectorAll('textarea'), function(textarea) {
-        storedFunctions.push({
-            func: textarea.value,
-            color: textarea.style.borderColor,
-        });
-    });
-    localStorage.setItem('functions', JSON.stringify(storedFunctions));
-}
-
 function handleFunctionInput(element)
 {
-    var text = element.value,
-        index = Array.prototype.indexOf.call(element.parentNode.children, element),
-        evaluate = 'func = ' + text,
-        func;
+    var text = element.value.trim();
+
+    element.classList.remove('error');
+    if (text.length === 0) {
+        return false;
+    }
+
     try {
-        eval(evaluate);
-        element.classList.remove('evaluated');
+        func = parseFunction(text);
         func.color = element.style.borderColor;
-        functions[index] = func;
-        return true;
+        return func;
     }
     catch (error) {
         element.classList.add('error');
-        console.error(error);
-        return false;
     }
+
+    return func;
+}
+
+function parseFunction(text)
+{
+    var wrappers = [
+        {
+            head: 'func =',
+            tail: '',
+        },
+        {
+            head: 'func = function(x) {',
+            tail: ';}',
+        },
+    ],
+    evaluate,
+    func;
+
+    for (var i = 0, l = wrappers.length; i !== l; ++i) {
+        evaluate = wrappers[i].head + text + wrappers[i].tail;
+        try {
+            eval(evaluate);
+            if (typeof(func) === 'function') {
+                return func;
+            }
+        }
+        catch (error) {
+        }
+    }
+
+    throw error;
 }
 
 function readViewportSize()
@@ -164,12 +208,38 @@ function readViewportSize()
     updateViewportMeta();
 }
 
+function storeFunctions()
+{
+    var storedFunctions = [];
+    [].forEach.call(funcInputs.querySelectorAll('textarea'), function(textarea) {
+        if (textarea.value.trim().length === 0) {
+            return;
+        }
+        storedFunctions.push({
+            func: textarea.value,
+            color: textarea.style.borderColor,
+        });
+    });
+    localStorage.setItem('functions', JSON.stringify(storedFunctions));
+}
 function updateCanvasSize()
 {
     var rect = canvas.getBoundingClientRect();
     canvas.width = rect.width;
     canvas.height = rect.height;
     updateViewportMeta();
+    drawAll();
+}
+
+function updateFunctions()
+{
+    functions = [];
+    [].forEach.call(funcInputs.querySelectorAll('textarea'), function(textarea) {
+        var func = handleFunctionInput(textarea);
+        if (func !== false) {
+            functions.push(func);
+        }
+    });
     drawAll();
 }
 
@@ -190,10 +260,8 @@ setInterval(detectGraphSizeChange, 2000);
 
 funcInputs.addEventListener('change', function(event) {
     if (event.target.tagName === 'TEXTAREA') {
-        if (handleFunctionInput(event.target)) {
-            drawAll();
-            storeFunctions();
-        }
+        updateFunctions();
+        storeFunctions();
     }
 });
 
@@ -211,4 +279,5 @@ graphInputs.addEventListener('change', function(event) {
 fetchFunctions();
 readViewportSize();
 updateCanvasSize();
+updateFunctions();
 drawAll();

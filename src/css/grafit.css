@@ -7,17 +7,19 @@ body {
 }
 
 #functions {
-    flex: 0 0 200px;
+    border-right: solid 1px rgba(0,0,0,.2);
+    flex: 0 0;
 }
 
 #functions textarea {
+    display: block;
     font-family: monospace;
     height: 5em;
     width: 20em;
 }
 
 #functions textarea.error {
-    border: solid 1px red;
+    background-color: rgba(255,0,0,.2);
 }
 
 #graph {
