@@ -42,7 +42,7 @@ function createInput()
 function detectGraphSizeChange()
 {
     var rect = canvas.getBoundingClientRect();
-    if (canvas.width !== rect.width || canvas.height !== rect.height) {
+    if (canvas.lastW !== rect.width || canvas.lastH !== rect.height) {
         updateCanvasSize();
     }
 }
@@ -227,6 +227,8 @@ function updateCanvasSize()
     var rect = canvas.getBoundingClientRect();
     canvas.width = rect.width;
     canvas.height = rect.height;
+    canvas.lastW = rect.width;
+    canvas.lastH = rect.height;
     updateViewportMeta();
     drawAll();
 }
