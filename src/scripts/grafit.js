@@ -155,6 +155,7 @@ function handleFunctionInput(element)
         return func;
     }
     catch (error) {
+        console.error(error);
         element.classList.add('error');
     }
 
@@ -174,17 +175,22 @@ function parseFunction(text)
         },
     ],
     evaluate,
-    func;
+    func,
+    error;
 
     for (var i = 0, l = wrappers.length; i !== l; ++i) {
         evaluate = wrappers[i].head + text + wrappers[i].tail;
         try {
             eval(evaluate);
             if (typeof(func) === 'function') {
+                if (!isFinite(func(1))) {
+                    throw new Error('Invalid return value');
+                }
                 return func;
             }
         }
-        catch (error) {
+        catch (e) {
+            error = e;
         }
     }
 
