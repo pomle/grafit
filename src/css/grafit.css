@@ -74,3 +74,17 @@ body {
     left: 50%;
     text-align: left;
 }
+
+.dark body {
+    background-color: #191919;
+}
+.dark #functions textarea {
+    background-color: #191919;
+    color: #00ff00;
+}
+.dark #graph input {
+    color: #fff;
+}
+.dark #graph:hover input {
+    background-color: rgba(0,0,0,.8);
+}

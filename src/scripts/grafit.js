@@ -265,7 +265,29 @@ funcInputs.addEventListener('change', function(event) {
         updateFunctions();
         storeFunctions();
     }
+    else if (event.target.name === 'theme') {
+        console.log(event.target);
+    }
 });
+
+(function() {
+    var themeSelector = document.querySelector('select[name=theme]');
+    themeSelector.addEventListener('change', function(event) {
+        var select = event.target,
+            html = document.querySelector('html');
+        [].forEach.call(select, function(opt) {
+            html.classList.remove(opt.value);
+        });
+        html.classList.add(select.value);
+        localStorage.setItem('theme', select.value);
+    });
+
+    var theme = localStorage.getItem('theme');
+    if (theme) {
+        themeSelector.value = theme;
+        themeSelector.dispatchEvent(new Event('change'));
+    }
+})();
 
 document.addEventListener('click', function(event) {
     if (event.target.name === 'createInput') {
