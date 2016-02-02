@@ -3,6 +3,7 @@ var canvas = document.getElementById('canvas'),
     functions = [],
     graphInputs = document.querySelector('#graph .inputs'),
     funcInputs = document.querySelector('#functions .inputs'),
+    zoomRect = document.querySelector('#graph .zoom'),
     viewport,
     scale,
     offset,
@@ -25,7 +26,6 @@ function canvasPoint(point)
         minY = -1,
         maxY = canvas.height + 1;
 
-
     if (y < minY) {
         y = minY;
     }
@@ -36,6 +36,14 @@ function canvasPoint(point)
     return {
         x: x,
         y: y,
+    }
+}
+
+function viewportPoint(point)
+{
+    return {
+        x: point.x * scale.x + viewport[0].x,
+        y: point.y * scale.y + viewport[0].y,
     }
 }
 
@@ -73,21 +81,24 @@ function drawAll()
 
 function drawFunction(f)
 {
-    if(scale.x === 0) {
-        return;
-    }
-
     var points = [],
         xMin = Math.min(viewport[0].x, viewport[1].x),
         xMax = Math.max(viewport[0].x, viewport[1].x),
+        xDiff = xMax - xMin,
+        xStep = xDiff / canvas.width,
         x = xMin;
+
+    if (xDiff === 0) {
+        console.error('Viewport zero size');
+        return;
+    }
 
     while (x <= xMax) {
         points.push({
             x: x,
             y: f(x),
         });
-        x += scale.x;
+        x += xStep;
     }
 
     context.beginPath();
@@ -155,30 +166,8 @@ function fetchFunctions()
         var element = createInput();
         element.value = storedFunctions[i].func;
         element.style.borderColor = storedFunctions[i].color;
-        handleFunctionInput(element);
+        parseTextarea(element);
     }
-}
-
-function handleFunctionInput(element)
-{
-    var text = element.value.trim();
-
-    element.classList.remove('error');
-    if (text.length === 0) {
-        return false;
-    }
-
-    try {
-        func = parseFunction(text);
-        func.color = element.style.borderColor;
-        return func;
-    }
-    catch (error) {
-        console.error(error);
-        element.classList.add('error');
-    }
-
-    return func;
 }
 
 function parseFunction(text)
@@ -214,6 +203,28 @@ function parseFunction(text)
     }
 
     throw error;
+}
+
+function parseTextarea(element)
+{
+    var text = element.value.trim();
+
+    element.classList.remove('error');
+    if (text.length === 0) {
+        return false;
+    }
+
+    try {
+        func = parseFunction(text);
+        func.color = element.style.borderColor;
+        return func;
+    }
+    catch (error) {
+        console.error(error);
+        element.classList.add('error');
+    }
+
+    return func;
 }
 
 function readViewportSize()
@@ -262,7 +273,7 @@ function updateFunctions()
 {
     functions = [];
     [].forEach.call(funcInputs.querySelectorAll('textarea'), function(textarea) {
-        var func = handleFunctionInput(textarea);
+        var func = parseTextarea(textarea);
         if (func !== false) {
             functions.push(func);
         }
@@ -287,13 +298,17 @@ setInterval(detectGraphSizeChange, 2000);
 
 funcInputs.addEventListener('change', function(event) {
     if (event.target.tagName === 'TEXTAREA') {
-        updateFunctions();
         storeFunctions();
     }
     else if (event.target.name === 'theme') {
         console.log(event.target);
     }
 });
+
+funcInputs.addEventListener('keyup', function(event) {
+    updateFunctions();
+});
+
 
 (function() {
     var themeSelector = document.querySelector('select[name=theme]');
@@ -318,7 +333,76 @@ document.addEventListener('click', function(event) {
     if (event.target.name === 'createInput') {
         createInput();
     }
+    else if (event.target.name === 'resetZoom') {
+        updateViewportSize(-10, 10, 10, -10);
+    }
 });
+document.addEventListener('mousedown', function(event) {
+    if (event.target.id === 'canvas') {
+        if (event.buttons === 1) {
+            var target = event.target;
+            zoomRect.start = {
+                x: event.layerX,
+                y: event.layerY,
+            };
+            zoomRect.classList.add('active');
+            drawZoomRect(zoomRect.start.x, zoomRect.start.y, zoomRect.start.x, zoomRect.start.y);
+        }
+    }
+});
+document.addEventListener('mousemove', function(event) {
+    if (zoomRect.classList.contains('active')) {
+        drawZoomRect(zoomRect.start.x, zoomRect.start.y, event.layerX, event.layerY);
+    }
+});
+document.addEventListener('mouseup', function(event) {
+    if (zoomRect.classList.contains('active')) {
+        zoomRect.classList.remove('active');
+        var x1 = Math.min(zoomRect.start.x, event.layerX),
+            x2 = Math.max(zoomRect.start.x, event.layerX),
+            y1 = Math.min(zoomRect.start.y, event.layerY),
+            y2 = Math.max(zoomRect.start.y, event.layerY);
+
+        if (x1 === x2 || y1 === y2) {
+            return;
+        }
+
+        var p1 = viewportPoint({x: x1, y: y1}),
+            p2 = viewportPoint({x: x2, y: y2});
+        updateViewportSize(p1.x, p1.y, p2.x, p2.y);
+    }
+});
+
+function drawZoomRect(a, b, c, d)
+{
+    console.log(arguments);
+
+    var w = Math.abs(a - c),
+        h = Math.abs(b - d),
+        l = Math.min(a, c),
+        t = Math.min(b, d);
+    zoomRect.style.left = l + 'px';
+    zoomRect.style.top = t + 'px';
+    zoomRect.style.width = w + 'px';
+    zoomRect.style.height = h + 'px';
+}
+
+function updateViewportSize(x1, y1, x2, y2)
+{
+    var map = {
+        x1: x1,
+        x2: x2,
+        y1: y1,
+        y2: y2,
+    };
+
+    [].forEach.call(graphInputs.querySelectorAll('input'), function(input) {
+        input.value = map[input.name];
+    });
+
+    readViewportSize();
+    drawAll();
+}
 
 graphInputs.addEventListener('change', function(event) {
     readViewportSize();

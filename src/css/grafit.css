@@ -28,6 +28,22 @@ body {
 #graph {
     flex: 1 1 auto;
     position: relative;
+    user-select: none;
+}
+
+#graph .zoom {
+    background-color: #98d5ec;
+    border: dashed 1px #1e9dcc;
+    opacity: .2;
+    pointer-events: none;
+    position: absolute;
+    height: 100px;
+    width: 100px;
+    visibility: hidden;
+}
+
+#graph .zoom.active {
+    visibility: visible;
 }
 
 #graph canvas {
