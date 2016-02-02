@@ -14,7 +14,7 @@ body {
 
 #functions textarea {
     border-style: solid;
-    border-width: 2px 1px 1px 1px;
+    border-width: 1px 0 0 6px;
     display: block;
     font-family: monospace;
     height: 5em;
