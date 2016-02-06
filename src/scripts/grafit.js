@@ -88,7 +88,7 @@ function drawFunction(f)
     var point = canvasPoint(points[0]);
     context.moveTo(point.x, point.y);
     for (var i = 1, l = points.length; i !== l; ++i) {
-        var point = canvasPoint(points[i]);
+        point = canvasPoint(points[i]);
         context.lineTo(point.x, point.y);
     }
     context.strokeStyle = f.color;
