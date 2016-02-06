@@ -20,9 +20,22 @@ var canvas = document.getElementById('canvas'),
 
 function canvasPoint(point)
 {
+    var x = (point.x + -viewport[0].x) / scale.x,
+        y = (point.y + -viewport[0].y) / scale.y,
+        minY = -1,
+        maxY = canvas.height + 1;
+
+
+    if (y < minY) {
+        y = minY;
+    }
+    else if (y > maxY) {
+        y = maxY;
+    }
+
     return {
-        x: (point.x + -viewport[0].x) / scale.x,
-        y: (point.y + -viewport[0].y) / scale.y,
+        x: x,
+        y: y,
     }
 }
 
