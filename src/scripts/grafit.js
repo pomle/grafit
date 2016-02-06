@@ -73,6 +73,10 @@ function drawAll()
 
 function drawFunction(f)
 {
+    if(scale.x === 0) {
+        return;
+    }
+
     var points = [],
         x = viewport[0].x;
 
