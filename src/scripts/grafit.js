@@ -78,9 +78,11 @@ function drawFunction(f)
     }
 
     var points = [],
-        x = viewport[0].x;
+        xMin = Math.min(viewport[0].x, viewport[1].x),
+        xMax = Math.max(viewport[0].x, viewport[1].x),
+        x = xMin;
 
-    while (x <= viewport[1].x) {
+    while (x <= xMax) {
         points.push({
             x: x,
             y: f(x),
