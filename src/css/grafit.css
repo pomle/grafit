@@ -45,7 +45,7 @@ body {
     padding: .3em;
     position: absolute;
     text-align: center;
-    width: 4em;
+    width: 10em;
 }
 
 #graph:hover input {
