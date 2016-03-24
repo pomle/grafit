@@ -172,6 +172,13 @@ function fetchFunctions()
 
 function parseFunction(text)
 {
+    var globals = [
+        'window',
+    ];
+    for (var prop in window) {
+        globals.push(prop);
+    }
+
     var wrappers = [
         {
             head: 'return ',
@@ -181,18 +188,21 @@ function parseFunction(text)
             head: 'return function(x) {\n',
             tail: ';\n}',
         },
+        {
+            head: 'return function(x) {\nreturn ',
+            tail: ';\n}',
+        },
     ],
     evaluate,
     func,
-    error,
-    dummy;
+    error;
 
     for (var i = 0, l = wrappers.length; i !== l; ++i) {
         evaluate = wrappers[i].head + text + wrappers[i].tail;
         try {
-            dummy = {};
-            func = new Function("self", "window", "'use strict';\n" + evaluate);
-            var ret = func.call(dummy, dummy, dummy);
+            var args = globals.concat(["'use strict';\n" + evaluate]);
+            func = new (Function.prototype.bind.apply(Function, args));
+            var ret = func();
 
             if (typeof(ret) === 'function') {
                 if (!isFinite(ret(1))) {
