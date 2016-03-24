@@ -174,27 +174,31 @@ function parseFunction(text)
 {
     var wrappers = [
         {
-            head: 'func =',
-            tail: '',
+            head: 'return ',
+            tail: ';',
         },
         {
-            head: 'func = function(x) {',
-            tail: ';}',
+            head: 'return function(x) {\n',
+            tail: ';\n}',
         },
     ],
     evaluate,
     func,
-    error;
+    error,
+    dummy;
 
     for (var i = 0, l = wrappers.length; i !== l; ++i) {
         evaluate = wrappers[i].head + text + wrappers[i].tail;
         try {
-            eval(evaluate);
-            if (typeof(func) === 'function') {
-                if (!isFinite(func(1))) {
+            dummy = {};
+            func = new Function("self", "window", "'use strict';\n" + evaluate);
+            var ret = func.call(dummy, dummy, dummy);
+
+            if (typeof(ret) === 'function') {
+                if (!isFinite(ret(1))) {
                     throw new Error('Invalid return value');
                 }
-                return func;
+                return ret;
             }
         }
         catch (e) {
